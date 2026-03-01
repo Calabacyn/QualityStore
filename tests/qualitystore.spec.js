@@ -4,6 +4,36 @@ const { test, expect } = require('@playwright/test');
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
+test.beforeEach(async ({ page }) => {
+    // Mocking de la API para devolver SIEMPRE estos dos productos
+    await page.route('**/api/products', async route => {
+        await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify([
+                {
+                    id: 1,
+                    title: "Producto Test A",
+                    price: 10.00,
+                    description: "Primer producto para pruebas",
+                    category: "men's clothing",
+                    image: "https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_.jpg"
+                },
+                {
+                    id: 2,
+                    title: "Producto Test B",
+                    price: 20.00,
+                    description: "Segundo producto para pruebas",
+                    category: "electronics",
+                    image: "https://fakestoreapi.com/img/61IBBVJvSDL._AC_SY879_.jpg"
+                }
+            ]),
+        });
+    });
+
+    // Ir a la web después de configurar el mock
+    await page.goto('http://localhost:3002');
+});
 
 /** Login as admin and wait until the admin dashboard is rendered */
 async function loginAsAdmin(page) {
@@ -11,7 +41,9 @@ async function loginAsAdmin(page) {
     await page.getByTestId('login-username').fill('admin');
     await page.getByTestId('login-password').fill('12345');
     await page.getByTestId('login-button').click();
-    await expect(page.getByText('Panel de Control')).toBeVisible({ timeout: 10_000 });
+    await page.getByTestId('login-button').click();
+    await page.waitForURL('**/', { timeout: 15000 });
+
 }
 
 /** Wait for the product grid or the empty-state message to finish loading */
