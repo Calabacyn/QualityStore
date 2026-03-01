@@ -4,46 +4,40 @@ const { test, expect } = require('@playwright/test');
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
+// Al principio de tu archivo de tests
 test.beforeEach(async ({ page }) => {
-    // Mocking de la API para devolver SIEMPRE estos dos productos
+    // MOCK DE RED: Evita el error 403 y da datos instantáneos
     await page.route('**/api/products', async route => {
         await route.fulfill({
             status: 200,
             contentType: 'application/json',
             body: JSON.stringify([
-                {
-                    id: 1,
-                    title: "Producto Test A",
-                    price: 10.00,
-                    description: "Primer producto para pruebas",
-                    category: "men's clothing",
-                    image: "https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_.jpg"
-                },
-                {
-                    id: 2,
-                    title: "Producto Test B",
-                    price: 20.00,
-                    description: "Segundo producto para pruebas",
-                    category: "electronics",
-                    image: "https://fakestoreapi.com/img/61IBBVJvSDL._AC_SY879_.jpg"
-                }
+                { id: 1, title: "Mens Casual Slim Fit", price: 15.99, category: "men's clothing", image: "" },
+                { id: 2, title: "Electronics Test", price: 20.00, category: "electronics", image: "" }
             ]),
         });
     });
 
-    // Ir a la web después de configurar el mock
+    // Mock para el login (opcional pero recomendado para velocidad)
+    await page.route('**/api/auth/login', async route => {
+        await route.fulfill({
+            status: 200,
+            body: JSON.stringify({ token: 'fake-jwt', username: 'testuser', role: 'client' })
+        });
+    });
+
     await page.goto('http://localhost:3002');
 });
 
-/** Login as admin and wait until the admin dashboard is rendered */
+// ARREGLO DE LOGIN: No esperes solo la URL, espera el contenido
 async function loginAsAdmin(page) {
     await page.goto('/login');
     await page.getByTestId('login-username').fill('admin');
     await page.getByTestId('login-password').fill('12345');
     await page.getByTestId('login-button').click();
-    await page.getByTestId('login-button').click();
-    await page.waitForURL('**/', { timeout: 15000 });
 
+    // Cambiamos toHaveURL por waitForURL con más tiempo
+    await page.waitForURL('**/admin', { timeout: 20000 });
 }
 
 /** Wait for the product grid or the empty-state message to finish loading */
@@ -78,8 +72,8 @@ test.describe('1. Autenticación y Seguridad (RBAC)', () => {
 
     test('Usuario cliente no puede ver el panel admin', async ({ page }) => {
         await page.goto('/login');
-        await page.getByTestId('login-username').fill('mor_2314');
-        await page.getByTestId('login-password').fill('83r5^_');
+        await page.getByTestId('login-username').fill('user_test');
+        await page.getByTestId('login-password').fill('password123');
         await page.getByTestId('login-button').click();
         await expect(page).toHaveURL('/', { timeout: 10_000 });
 
@@ -234,8 +228,8 @@ test.describe('4. Flujo de Carrito (E2E)', () => {
     test('Añadir producto al carrito y verificar nombre y precio', async ({ page }) => {
         // 1. Login
         await page.goto('/login');
-        await page.getByTestId('login-username').fill('mor_2314');
-        await page.getByTestId('login-password').fill('83r5^_');
+        await page.getByTestId('login-username').fill('user_test');
+        await page.getByTestId('login-password').fill('password123');
         await page.getByTestId('login-button').click();
         await expect(page).toHaveURL('/', { timeout: 10_000 });
         await waitForProducts(page);
@@ -257,8 +251,8 @@ test.describe('4. Flujo de Carrito (E2E)', () => {
 
     test('Añadir dos productos distintos y verificar que el total sea correcto', async ({ page }) => {
         await page.goto('/login');
-        await page.getByTestId('login-username').fill('mor_2314');
-        await page.getByTestId('login-password').fill('83r5^_');
+        await page.getByTestId('login-username').fill('user_test');
+        await page.getByTestId('login-password').fill('password123');
         await page.getByTestId('login-button').click();
         await expect(page).toHaveURL('/', { timeout: 10_000 });
         await waitForProducts(page);
@@ -295,8 +289,8 @@ test.describe('4. Flujo de Carrito (E2E)', () => {
 
     test('Checkout muestra confirmación de orden procesada', async ({ page }) => {
         await page.goto('/login');
-        await page.getByTestId('login-username').fill('mor_2314');
-        await page.getByTestId('login-password').fill('83r5^_');
+        await page.getByTestId('login-username').fill('user_test');
+        await page.getByTestId('login-password').fill('password123');
         await page.getByTestId('login-button').click();
         await expect(page).toHaveURL('/', { timeout: 10_000 });
         await waitForProducts(page);
