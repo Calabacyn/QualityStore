@@ -1,0 +1,44 @@
+name: QualityStore CI - E2E & Resilience
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          
+      - name: Install Root Dependencies
+        run: npm install
+        
+      - name: Install Backend Dependencies
+        run: cd api && npm install
+        
+      - name: Install Frontend Dependencies
+        run: cd web && npm install
+        
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+        
+      - name: Run API Tests (Jest)
+        run: cd api && npm test
+        
+      - name: Run E2E Tests (Playwright)
+        run: npx playwright test
+        
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
