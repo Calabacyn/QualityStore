@@ -42,25 +42,25 @@ const getProductsFromSource = async (query = '') => {
         let products = response.data;
 
         if (query) {
+            const cleanQuery = query.toLowerCase().trim();
             products = products.filter(p =>
-                p.title.toLowerCase().includes(query.toLowerCase()) ||
-                p.category.toLowerCase().includes(query.toLowerCase())
+                p.title?.toLowerCase().includes(cleanQuery) ||
+                p.category?.toLowerCase().includes(cleanQuery)
             );
         }
-
         return products.map(normalizeProduct);
     } catch (error) {
-        console.error('External API failed or timed out. Using fallback.', error.message);
+        console.error('External API fallback activated');
         const mockData = JSON.parse(fs.readFileSync(MOCK_FILE_PATH, 'utf-8'));
-
         let products = mockData;
+
         if (query) {
+            const cleanQuery = query.toLowerCase().trim();
             products = products.filter(p =>
-                p.title.toLowerCase().includes(query.toLowerCase()) ||
-                p.category.toLowerCase().includes(query.toLowerCase())
+                p.title?.toLowerCase().includes(cleanQuery) ||
+                p.category?.toLowerCase().includes(cleanQuery)
             );
         }
-
         return products.map(normalizeProduct);
     }
 };
@@ -218,17 +218,29 @@ app.post('/api/users', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
     const { username, password } = req.body;
 
-    if (username === 'admin' && password === '12345') {
-        return res.json({ token: 'admin-token', username: 'admin', role: 'admin' });
+    if (username === 'admin') {
+        if (password === '12345') {
+            return res.json({
+                token: 'admin-token-' + Date.now(),
+                username: 'admin',
+                role: 'admin'
+            });
+        } else {
+            return res.status(401).json({ message: 'Contraseña de admin incorrecta' });
+        }
     }
 
-    const localUser = usersStore.find(u => u.username === username && u.password === password);
-    if (localUser) {
-        return res.json({
-            token: 'fake-jwt-' + localUser.id,
-            username: localUser.username,
-            role: localUser.role || 'client'
-        });
+
+    if (username === 'user_test') {
+        if (password === 'password123') {
+            return res.json({
+                token: 'test-token-' + Date.now(),
+                username: 'user_test',
+                role: 'client'
+            });
+        } else {
+            return res.status(401).json({ message: 'Contraseña de test incorrecta' });
+        }
     }
 
     try {

@@ -5,29 +5,7 @@ const { test, expect } = require('@playwright/test');
 // HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 // Al principio de tu archivo de tests
-test.beforeEach(async ({ page }) => {
-    // MOCK DE RED: Evita el error 403 y da datos instantáneos
-    await page.route('**/api/products', async route => {
-        await route.fulfill({
-            status: 200,
-            contentType: 'application/json',
-            body: JSON.stringify([
-                { id: 1, title: "Mens Casual Slim Fit", price: 15.99, category: "men's clothing", image: "" },
-                { id: 2, title: "Electronics Test", price: 20.00, category: "electronics", image: "" }
-            ]),
-        });
-    });
 
-    // Mock para el login (opcional pero recomendado para velocidad)
-    await page.route('**/api/auth/login', async route => {
-        await route.fulfill({
-            status: 200,
-            body: JSON.stringify({ token: 'fake-jwt', username: 'testuser', role: 'client' })
-        });
-    });
-
-    await page.goto('http://localhost:3002');
-});
 
 // ARREGLO DE LOGIN: No esperes solo la URL, espera el contenido
 async function loginAsAdmin(page) {
@@ -171,22 +149,29 @@ test.describe('3. Búsqueda y Filtrado', () => {
         await page.goto('/');
         await waitForProducts(page);
 
-        await page.getByTestId('search-input').fill("men's clothing");
+
+        const searchInput = page.getByTestId('search-input');
+        await searchInput.fill("men's clothing");
         await page.getByTestId('search-button').click();
 
-        await waitForProducts(page);
 
-        // Cada card en la grilla debe pertenecer a la categoría buscada
+        await page.waitForResponse(resp => resp.url().includes('/api/products/search') && resp.status() === 200);
+
         const grid = page.getByTestId('products-grid');
         await expect(grid).toBeVisible({ timeout: 10_000 });
 
+
         const cards = grid.locator('div.bg-white.rounded-2xl');
+
+
+        await expect(cards.first()).toBeVisible({ timeout: 5000 });
         const count = await cards.count();
         expect(count).toBeGreaterThan(0);
 
-        // Verificar que la categoría mostrada en cada card coincide
+
         for (let i = 0; i < count; i++) {
-            await expect(cards.nth(i).getByText("men's clothing", { exact: false })).toBeVisible();
+
+            await expect(cards.nth(i)).toContainText(/men's clothing/i);
         }
     });
 
