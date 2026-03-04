@@ -10,7 +10,7 @@ const CartPage = () => {
     const [orderProcessed, setOrderProcessed] = useState(false);
 
     const handleCheckout = () => {
-        // Simulated validation
+
         if (cartItems.length === 0) return;
         setOrderProcessed(true);
         clearCart();

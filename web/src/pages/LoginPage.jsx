@@ -20,11 +20,10 @@ const LoginPage = () => {
         try {
             const userData = await login(username, password);
 
-            // Console log para debug (míralo en el navegador F12)
+
             console.log("Datos recibidos del login:", userData);
 
-            // Verificación ultra-flexible:
-            // Comprobamos si el rol es admin (en cualquier caso) o si el usuario escribió "admin"
+
             const isAdmin =
                 userData?.role?.toLowerCase() === 'admin' ||
                 username.toLowerCase() === 'admin';

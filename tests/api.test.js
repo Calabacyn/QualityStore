@@ -8,7 +8,6 @@ describe('QualityStore API Tests', () => {
         expect(Array.isArray(response.body)).toBe(true);
         expect(response.body.length).toBeGreaterThan(0);
 
-        // Validate schema
         const product = response.body[0];
         expect(product).toHaveProperty('id');
         expect(product).toHaveProperty('title');

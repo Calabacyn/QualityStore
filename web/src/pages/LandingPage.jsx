@@ -9,16 +9,26 @@ const LandingPage = () => {
     const [error, setError] = useState(null);
 
     const fetchProducts = async (query = '') => {
+
+        console.log("🔍 Intentando buscar:", query);
+
         setLoading(true);
         try {
-            const url = query
-                ? `http://localhost:3001/api/products/search?q=${query}`
+
+            const queryString = typeof query === 'string' ? query : '';
+            const url = queryString
+                ? `http://localhost:3001/api/products/search?q=${encodeURIComponent(queryString.trim())}`
                 : 'http://localhost:3001/api/products';
+
+            console.log("📡 URL de petición:", url);
 
             const response = await fetch(url);
             const data = await response.json();
+
+            console.log("✅ Datos recibidos:", data);
             setProducts(data);
         } catch (err) {
+            console.error("❌ Error en fetch:", err);
             setError('Could not connect to the server.');
         } finally {
             setLoading(false);

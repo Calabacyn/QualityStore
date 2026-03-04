@@ -56,7 +56,7 @@ const AdminDashboard = () => {
             if (response.ok) {
                 const savedProduct = await response.json();
 
-                // --- ACTUALIZACIÓN OPTIMISTA (SIN RECARGAR TODO) ---
+
                 if (editingProduct) {
                     setProducts(prev => prev.map(p => p.id === editingProduct.id ? savedProduct : p));
                 } else {
@@ -117,15 +117,15 @@ const AdminDashboard = () => {
             if (response.ok) {
                 const savedUser = await response.json();
 
-                // --- EL TRUCO PARA QUE APAREZCA SÍ O SÍ ---
+
                 if (editingUser) {
                     setUsers(prev => prev.map(u => u.id === editingUser.id ? savedUser : u));
                 } else {
-                    // Si es nuevo, le damos un ID único temporal por si la API repite IDs
+
                     const userWithId = {
                         ...savedUser,
-                        id: savedUser.id || Date.now(), // Usa la fecha como ID si la API falla
-                        password: userData.password // Aseguramos que la pass se mantenga
+                        id: savedUser.id || Date.now(),
+                        password: userData.password
                     };
                     setUsers(prev => [userWithId, ...prev]);
                 }
